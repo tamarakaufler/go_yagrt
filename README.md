@@ -34,3 +34,4 @@ Recreate a wheel to know how it works.
       * use two different implementations to identify and store parameters defined during the path registration:
         * use a Trie type tree
         * use regexes
+      * compare performace
