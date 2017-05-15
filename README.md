@@ -20,4 +20,17 @@ Recreate a wheel to know how it works.
 
 
 
+## Implementation
 
+- router:
+  * requirements:
+    * must be able to process incoming request routes:
+      * it must be possible to register a request path with a provided handler
+      * it must be possible to use middleware
+    * provide some basic handlers
+
+  * implementation:
+    * use router.Params to store parameters defined during the path registration
+      * use two different implementations to identify and store parameters defined during the path registration:
+        * use a Trie type tree
+        * use regexes
