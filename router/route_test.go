@@ -9,14 +9,17 @@ import (
 func Test_processRequest(t *testing.T) {
 
 	isParam := make(map[string]bool)
+	isParamTrue := make(map[string]bool)
+	handlers := make(map[string]Handler)
 	handlersEmpty := make(map[string]Handler)
+	routes := make(map[string]*Route)
+	routesP := make(map[string]*Route)
 	routesEmpty := make(map[string]*Route)
 	paramsEmpty := make(map[string]interface{})
-	handlers := make(map[string]Handler)
-	routes := make(map[string]*Route)
-	//params := make(map[string]interface{})
+	params := make(map[string]interface{})
 
 	isParam["GET"] = false
+	isParamTrue["GET"] = false
 
 	handler := func(res http.ResponseWriter, req *http.Request) {}
 	handlers["GET"] = handler
@@ -28,6 +31,16 @@ func Test_processRequest(t *testing.T) {
 		Routes:   routesEmpty,
 	}
 	routes["bbb"] = route
+
+	routeP := &Route{
+		Segment:  ":bbb",
+		IsParam:  isParamTrue,
+		Handlers: handlers,
+		Routes:   routesEmpty,
+	}
+	routesP[":bbb"] = routeP
+
+	params[":bbb"] = 101
 
 	type args struct {
 		segments []string
@@ -53,7 +66,7 @@ func Test_processRequest(t *testing.T) {
 					Segment:  "/",
 					IsParam:  isParam,
 					Handlers: handlers,
-					Routes:   routesEmpty,
+					Routes:   routes,
 				},
 				i:      0,
 				params: paramsEmpty,
@@ -71,7 +84,7 @@ func Test_processRequest(t *testing.T) {
 					Segment:  "test",
 					IsParam:  isParam,
 					Handlers: handlers,
-					Routes:   routesEmpty,
+					Routes:   routes,
 				},
 				i:      0,
 				params: paramsEmpty,
@@ -94,7 +107,25 @@ func Test_processRequest(t *testing.T) {
 				i:      0,
 				params: paramsEmpty,
 			},
-			want:    handler,
+			want:    routes["bbb"].Handlers["GET"],
+			want1:   paramsEmpty,
+			wantErr: false,
+		},
+		{
+			name: "/aaa/:bbb request - success",
+			args: args{
+				segments: []string{"aaa", "101"},
+				method:   "GET",
+				route: &Route{
+					Segment:  "aaa",
+					IsParam:  isParam,
+					Handlers: handlersEmpty,
+					Routes:   routesP,
+				},
+				i:      0,
+				params: params,
+			},
+			want:    routes["bbb"].Handlers["GET"],
 			want1:   paramsEmpty,
 			wantErr: false,
 		},
