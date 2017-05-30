@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -83,7 +84,15 @@ func (m *Mux) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		log.Fatal(err)
 	}
 
-	handler, err := processRequest(segments, req, m.BaseRoute, 0)
+	params := make(map[string]interface{})
+	handler, params, err := processRequest(segments, req.Method, m.BaseRoute, 0, params)
+
+	ctx := req.Context()
+	for k, v := range params {
+		ctx = context.WithValue(ctx, k, v)
+	}
+	req = req.WithContext(ctx)
+
 	if err != nil {
 		notFound(res, req)
 	}

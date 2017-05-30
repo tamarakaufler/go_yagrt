@@ -13,7 +13,7 @@ func getHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	fmt.Println("go_router wheel\n")
+	fmt.Println("go_router wheel")
 
 	mux, err := router.New("/")
 	if err != nil {

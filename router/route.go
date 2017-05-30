@@ -1,10 +1,8 @@
 package router
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"regexp"
 	"strings"
 )
@@ -120,14 +118,13 @@ func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 
 // processRequest - heppens during HTTP request
 //		finds the relevant handler
-func processRequest(segments []string, req *http.Request, route *Route, i int) (Handler, error) {
+func processRequest(segments []string, method string, route *Route, i int, params map[string]interface{}) (Handler, map[string]interface{}, error) {
 
-	fmt.Printf(">>> processRequest - segments: %v\nroute: %v\ni: %v\n", segments, route, i)
+	fmt.Printf(">>> processRequest - segments: %v\nroute: %v\ni: %v\n", segments, route.Segment, i)
 
 	var ok bool
+	var isParam bool
 	var handler Handler
-
-	method := req.Method
 
 	fmt.Printf("\t>>> processRequest - Routes length=%d\n", len(segments))
 
@@ -135,44 +132,68 @@ func processRequest(segments []string, req *http.Request, route *Route, i int) (
 	//		path ... /
 	if len(segments) == 0 {
 		if handler, ok = route.Handlers[method]; !ok {
-			return nil, errors.New("No handler for " + req.URL.RawPath)
+			return nil, nil, errors.New("No handler for /")
 		}
-		return handler, nil
+		return handler, params, nil
 	}
 
-	routes := route.Routes
-	segment := segments[i]
-
-	if routes == nil {
-		return nil, errors.New("Error in route registration: Missing child Routes at " + route.Segment)
-	}
-
-	fmt.Printf("\t>>> processRequest - route for segment %s=%v\n", segment, routes[segment])
-
-	if route, ok = routes[segment]; !ok {
-		return nil, errors.New("Error in route registration: Missing Route at " + route.Segment)
-	}
-
-	if _, ok = route.IsParam[method]; ok {
-		ctx := req.Context()
-		ctx = context.WithValue(ctx, route.Segment, segment)
-		req = req.WithContext(ctx)
-
-		fmt.Printf("\t\t>> processRequest -  parameter %v = %v\n\n", route.Segment, req.Context().Value(route.Segment))
-	}
+	// crrent request path segment
+	seg := segments[i]
 
 	// base case 2 of the recursive method
 	//		returning when this is the last segment
 	if i == (len(segments) - 1) {
 		if handler, ok = route.Handlers[method]; !ok {
-			return nil, errors.New("No handler for " + req.URL.RawPath)
+			return nil, params, errors.New("No handler for " + fmt.Sprintf("%v", segments))
 		}
 
-		fmt.Printf("\t>>> FINISHED (i=%d, segment=%v) - found the handler\n\n", i, segment)
-		return handler, nil
+		fmt.Printf("\t>>> FINISHED (i=%d, segment=%v) - found the handler\n\n", i, seg)
+		return handler, params, nil
+	}
+
+	if seg == route.Segment {
+		// base case 2 of the recursive method
+		//		returning when this is the last segment
+		if i == (len(segments) - 1) {
+			if handler, ok = route.Handlers[method]; !ok {
+				return nil, params, errors.New("No handler for " + fmt.Sprintf("%v", segments))
+			}
+
+			fmt.Printf("\t>>> FINISHED (i=%d, segment=%v) - found the handler\n\n", i, seg)
+			return handler, params, nil
+		}
+	}
+
+	if isParam, ok = route.IsParam[method]; ok && isParam == true {
+		params[route.Segment] = seg
+
+		fmt.Printf("\t\t>> processRequest -  params %v \n\n", params)
+
+		// base case 3 of the recursive method
+		//		returning when this is the last segment
+		if i == (len(segments) - 1) {
+			if handler, ok = route.Handlers[method]; !ok {
+				return nil, params, errors.New("No handler for " + fmt.Sprintf("%v", segments))
+			}
+
+			fmt.Printf("\t>>> FINISHED (i=%d, segment=%v) - found the handler\n\n", i, seg)
+			return handler, params, nil
+		}
 	}
 
 	// recursion into child routes
-	processRequest(segments, req, route, i+1)
-	return handler, nil
+	routes := route.Routes
+
+	if routes == nil {
+		return nil, nil, errors.New("Error in route registration: Missing child Routes at " + route.Segment)
+	}
+	if route, ok = routes[seg]; !ok {
+		return nil, nil, errors.New("Error in route registration: Missing Route at " + seg)
+	}
+
+	fmt.Printf("\t>>> processRequest - route for segment %s=%v\n", seg, routes[seg])
+
+	processRequest(segments, method, route, i+1, params)
+
+	return handler, params, nil
 }
