@@ -120,13 +120,11 @@ func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 //		finds the relevant handler
 func processRequest(segments []string, method string, route *Route, i int, params map[string]interface{}) (Handler, map[string]interface{}, error) {
 
-	fmt.Printf(">>> processRequest - segments: %+v\nroute: %+v\ni: %+v\n", segments, route.Segment, i)
+	fmt.Printf("!!! processRequest - segments: %+v\nthis segment: %+v\ni: %+v\n", segments, route.Segment, i)
 
 	var ok bool
 	var isParam bool
 	var handler Handler
-
-	fmt.Printf("\t>>> processRequest - Routes length=%d\n", len(segments))
 
 	// base case 1 of the recursive method
 	//		path ... /
@@ -149,37 +147,59 @@ func processRequest(segments []string, method string, route *Route, i int, param
 
 		if isParam, ok = route.IsParam[method]; ok && isParam == true {
 			params[route.Segment] = seg
-
-			fmt.Printf("\t\t>> processRequest -  params %+v \n\n", params)
 		}
 
 		fmt.Printf("\t>>> FINISHED (i=%d, segment=%+v) - found the handler\n\n", i, seg)
 		return handler, params, nil
 	}
 
-	if isParam, ok = route.IsParam[method]; ok && isParam == true {
-		params[route.Segment] = seg
-
-		fmt.Printf("\t\t>> processRequest -  params %+v \n\n", params)
-
-		i++
-		processRequest(segments, method, route.Routes[segments[i]], i, params)
-	}
-
-	// recursion into child routes
 	routes := route.Routes
-	i++
-	seg = segments[i]
+
+	//fmt.Printf("\t\t>> processRequest - routes[bbb]=%+v\n", routes["bbb"])
 
 	if routes == nil {
 		return nil, nil, errors.New("Error in route registration: Missing child Routes at " + route.Segment)
 	}
 
-	if route, ok = routes[seg]; !ok {
-		return nil, nil, errors.New("Error in route registration: Missing Route at " + seg)
+	if isParam, ok = route.IsParam[method]; ok && isParam == true {
+		params[route.Segment] = seg
 	}
 
-	fmt.Printf("\t>>> processRequest - route for segment %s=%+v\n", seg, routes[seg])
+	parentSeg := route.Segment
 
-	return processRequest(segments, method, route, i, params)
+	y := i + 1
+	nextSeg := segments[y]
+
+	// recursion into child routes
+	if route, ok = routes[nextSeg]; !ok {
+		var err error
+
+		// this if seg is a named param
+		route, err = getParamSegRoute(routes)
+
+		if err != nil {
+			return nil, nil, err
+		}
+		if route == nil {
+			return nil, nil, errors.New("Error in route registration: Missing Route at " + parentSeg)
+		}
+	}
+
+	return processRequest(segments, method, route, i+1, params)
+}
+
+func getParamSegRoute(routes map[string]*Route) (*Route, error) {
+	var ok bool
+	var err error
+
+	for k := range routes {
+		ok, err = regexp.MatchString("^:", k)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			return routes[k], nil
+		}
+	}
+	return nil, nil
 }

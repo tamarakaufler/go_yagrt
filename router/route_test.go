@@ -19,18 +19,18 @@ func Test_processRequest(t *testing.T) {
 	params := make(map[string]interface{})
 
 	isParam["GET"] = false
-	isParamTrue["GET"] = false
+	isParamTrue["GET"] = true
 
 	handler := func(res http.ResponseWriter, req *http.Request) {}
 	handlers["GET"] = handler
 
-	route := &Route{
+	routeB := &Route{
 		Segment:  "bbb",
 		IsParam:  isParam,
 		Handlers: handlers,
 		Routes:   routesEmpty,
 	}
-	routes["bbb"] = route
+	routes["bbb"] = routeB
 
 	routeP := &Route{
 		Segment:  ":bbb",
@@ -40,7 +40,7 @@ func Test_processRequest(t *testing.T) {
 	}
 	routesP[":bbb"] = routeP
 
-	params[":bbb"] = 101
+	params[":bbb"] = "101"
 
 	type args struct {
 		segments []string
@@ -123,10 +123,10 @@ func Test_processRequest(t *testing.T) {
 					Routes:   routesP,
 				},
 				i:      0,
-				params: params,
+				params: paramsEmpty,
 			},
-			want:    routes["bbb"].Handlers["GET"],
-			want1:   paramsEmpty,
+			want:    routesP[":bbb"].Handlers["GET"],
+			want1:   params,
 			wantErr: false,
 		},
 	}
@@ -140,8 +140,9 @@ func Test_processRequest(t *testing.T) {
 			if reflect.ValueOf(got) != reflect.ValueOf(tt.want) {
 				t.Errorf("processRequest() got = %v, want %v", got, tt.want)
 			}
+
 			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("processRequest() got1 = %v, want %v", got1, tt.want1)
+				t.Errorf("processRequest() got1 = %+v, want %+v", got1, tt.want1)
 			}
 		})
 	}
