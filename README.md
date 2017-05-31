@@ -17,7 +17,7 @@ Recreate a wheel to know how it works.
 - the default router is of type Handler, meaning it satisfies its interface, ie implements the ServeHTTP method:
   * ServeHTTP(http.ResponseWriter, *http.Request)
 
-- any object can be a handler. If it satisfies the Handler interface then it can be used to handle requests         
+- any object can be a handler; if it satisfies the Handler interface then it can be used to handle requests         
 
 
 
