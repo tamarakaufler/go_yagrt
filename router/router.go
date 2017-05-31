@@ -7,8 +7,6 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Handler type
@@ -167,13 +165,6 @@ func (m *Mux) doRegister(method string, segments []string, handler Handler) erro
 	}
 
 	m.BaseRoute.Routes = routes
-
-	if x, ok := m.BaseRoute.Routes["bbb"]; ok {
-		spew.Dump(x.Segment)
-		spew.Dump(x.IsParam["GET"])
-		spew.Dump(x.Handlers["GET"])
-		spew.Dump(x.Routes["GET"])
-	}
 
 	return nil
 }

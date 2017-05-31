@@ -111,9 +111,9 @@ func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 
 	fmt.Printf("\t>>> processSegment: recursion for segment %s\n", requestPath.Segments[i+1])
 
-	processSegment(i+1, requestPath)
+	return processSegment(i+1, requestPath)
 
-	return routes, nil
+	//return routes, nil
 }
 
 // processRequest - heppens during HTTP request

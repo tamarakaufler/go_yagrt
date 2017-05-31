@@ -149,6 +149,26 @@ func Test_processRequest(t *testing.T) {
 }
 
 func Test_processSegment(t *testing.T) {
+	isParam := make(map[string]bool)
+	handlers := make(map[string]Handler)
+	routes := make(map[string]*Route)
+
+	handler := func(res http.ResponseWriter, req *http.Request) {}
+
+	routeA := &Route{
+			Segment:  "aaa",
+			IsParam:  isParam,
+			Handlers: handlers,
+			Routes:   routes,		
+	}
+
+	requestPath1 := RequestPath{
+		Segments: segments,         
+		Routes:   routes, 			
+		Method:   "POST",
+		Handler:  handler, 	
+	}
+
 	type args struct {
 		i           int
 		requestPath RequestPath
@@ -159,7 +179,14 @@ func Test_processSegment(t *testing.T) {
 		want    map[string]*Route
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
+		{
+			name: "",
+			args{
+				i: 0,
+				requestPath: 
+			}
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
