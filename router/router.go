@@ -1,3 +1,7 @@
+/*
+Package router ... an alternative multiplexor implementation
+allows to use named parameters
+*/
 package router
 
 import (
@@ -6,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"reflect"
 	"regexp"
 )
 
@@ -85,6 +90,16 @@ func (m *Mux) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	params := make(map[string]interface{})
 	handler, params, err := processRequest(segments, req.Method, m.BaseRoute, 0, params)
 
+	if err != nil {
+		res.WriteHeader(500)
+		res.Write([]byte(err.Error()))
+		return
+	}
+
+	fmt.Printf("-------------------------HANDLER for segments %v ------------------------------\n", segments)
+	fmt.Printf(reflect.ValueOf(handler).String())
+	fmt.Printf("\n-------------------------------------------------------\n\n")
+
 	ctx := req.Context()
 	for k, v := range params {
 		ctx = context.WithValue(ctx, k, v)
@@ -100,22 +115,27 @@ func (m *Mux) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 // GET method
 func (m *Mux) GET(path string, handler Handler) {
-	fmt.Printf("---> %v - %v\n", path, handler)
+	fmt.Printf("---> GET %v - %v\n", path, handler)
+	fmt.Printf(reflect.ValueOf(handler).String())
+	fmt.Printf("\n-------------------------------------------------------\n\n")
 	m.register(path, "GET", handler)
 }
 
 // POST method
 func (m *Mux) POST(path string, handler Handler) {
+	//fmt.Printf("---> %v - %v\n", path, handler)
 	m.register(path, "POST", handler)
 }
 
 // PUT method
 func (m *Mux) PUT(path string, handler Handler) {
+	//fmt.Printf("---> %v - %v\n", path, handler)
 	m.register(path, "PUT", handler)
 }
 
 // DELETE method
 func (m *Mux) DELETE(path string, handler Handler) {
+	//fmt.Printf("---> %v - %v\n", path, handler)
 	m.register(path, "DELETE", handler)
 }
 
@@ -135,8 +155,8 @@ func (m *Mux) register(path string, method string, handler Handler) {
 	segments, err := getSegments(path)
 
 	if err != nil {
-		fmt.Println("=====================================")
-		panic(err)
+		//fmt.Printf("Failed to register handler for path: %s\n", path)
+		return
 	}
 
 	m.doRegister(method, segments, handler)

@@ -8,6 +8,7 @@ import (
 )
 
 func getHandler(res http.ResponseWriter, req *http.Request) {
+	fmt.Printf("\tHello World handler\n")
 	res.WriteHeader(200)
 	res.Write([]byte("Hello World"))
 }
@@ -22,27 +23,32 @@ func main() {
 
 	mux.GET("/", getHandler)
 	mux.GET("/test", func(res http.ResponseWriter, req *http.Request) {
+		//fmt.Printf("\tHello Test without slash\n")
 		res.WriteHeader(200)
 		res.Write([]byte("Hello Test without slash"))
 	})
 	mux.GET("/test/", func(res http.ResponseWriter, req *http.Request) {
+		//fmt.Printf("\tHello Test with slash\n")
 		res.WriteHeader(200)
 		res.Write([]byte("Hello Test with slash"))
 	})
 	mux.GET("/aaa/bbb", func(res http.ResponseWriter, req *http.Request) {
+		//fmt.Printf("\tHello /aaa/bbb\n")
 		res.WriteHeader(200)
-		res.Write([]byte("Hello aaa/bbb"))
+		res.Write([]byte("Hello /aaa/bbb"))
 	})
 	mux.GET("/aaa/bbb/ccc", func(res http.ResponseWriter, req *http.Request) {
+		//fmt.Printf("\tHello /aaa/bbb/ccc\n")
 		res.WriteHeader(200)
-		res.Write([]byte("Hello aaa/bbb/ccc"))
+		res.Write([]byte("Hello /aaa/bbb/ccc"))
 	})
 	mux.GET("/param/:param", func(res http.ResponseWriter, req *http.Request) {
+		//fmt.Printf("\tHello /param/:param\n")
 		res.WriteHeader(200)
 
 		param := req.Context().Value(":param")
-		fmt.Printf("%v\n\n", param)
-		res.Write([]byte("Hello Param"))
+		//fmt.Printf("%v\n\n", param)
+		res.Write([]byte("Hello Param ... " + param.(string)))
 	})
 
 	http.ListenAndServe(":8888", mux)

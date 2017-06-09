@@ -49,38 +49,35 @@ func getSegments(path string) ([]string, error) {
 func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 
 	var (
-		err      error
-		ok       bool
-		isParam  map[string]bool
-		handlers map[string]Handler
-		routes   map[string]*Route
+		err error
+		ok  bool
 	)
+
+	routes := make(map[string]*Route)
 
 	segments := requestPath.Segments
 	method := requestPath.Method
 	handler := requestPath.Handler
-	routes = requestPath.Routes
 
 	if len(segments) == 0 {
 		return routes, nil
 	}
 
-	fmt.Printf(">>> processSegment: i=%d, segments %+v\n", i, segments)
-	fmt.Printf("\t>>> processSegment: +%+v\n", requestPath.Method)
+	fmt.Printf(">>> PROCESSING stage %d in segments %v\n", i, segments)
+	fmt.Printf("\t>>> processSegment: %+v\n", requestPath.Method)
 
 	seg := segments[i]
 	route, ok := routes[seg]
 
+	fmt.Printf("\t>>> processSegment: %+v\n", requestPath.Routes)
+
 	// a new segment => create a new child tree node/Route
 	if !ok {
-		isParam = make(map[string]bool)
-		handlers = make(map[string]Handler)
-		routes = make(map[string]*Route)
 		route = &Route{
 			Segment:  seg,
-			IsParam:  isParam,
-			Handlers: handlers,
-			Routes:   routes,
+			IsParam:  make(map[string]bool),
+			Handlers: make(map[string]Handler),
+			Routes:   make(map[string]*Route),
 		}
 	}
 
@@ -98,29 +95,31 @@ func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 	//associate the path with a handler
 	if i == (sl - 1) {
 		route.Handlers[method] = handler
-		routes[seg] = route
 
-		//fmt.Printf("\t>>> processSegment: handler = %+v\n")
+		fmt.Printf("\t>>> processSegment: %+v\n", routes)
+
+		requestPath.Routes[seg] = route
+
 		fmt.Printf("\t>>> processSegment: len(route.Handlers) = %+v\n", len(route.Handlers))
 		fmt.Printf("\t>>> FINISHED (i=%d, segment=%+v) - found the handler\n\n", i, seg)
-		return routes, nil
+		return requestPath.Routes, nil
 	}
 
-	routes[seg] = route
-	requestPath.Routes = routes
+	i++
+	seg = requestPath.Segments[i]
+	route.Routes[seg] = route
+	requestPath.Routes[seg] = route
 
-	fmt.Printf("\t>>> processSegment: recursion for segment %s\n", requestPath.Segments[i+1])
+	fmt.Printf("\t>>> processSegment: recursion for i=%d: segment %s\n", i, requestPath.Segments[i])
 
-	return processSegment(i+1, requestPath)
-
-	//return routes, nil
+	return processSegment(i, requestPath)
 }
 
 // processRequest - heppens during HTTP request
 //		finds the relevant handler
 func processRequest(segments []string, method string, route *Route, i int, params map[string]interface{}) (Handler, map[string]interface{}, error) {
 
-	fmt.Printf("!!! processRequest - segments: %+v\nthis segment: %+v\ni: %+v\n", segments, route.Segment, i)
+	fmt.Printf("!!! processRequest - parent segment: %+v\nsegments: %+v\ni: %+v\n!!!!!!!!!!\n\n", route.Segment, segments, i)
 
 	var ok bool
 	var isParam bool
@@ -155,8 +154,6 @@ func processRequest(segments []string, method string, route *Route, i int, param
 
 	routes := route.Routes
 
-	//fmt.Printf("\t\t>> processRequest - routes[bbb]=%+v\n", routes["bbb"])
-
 	if routes == nil {
 		return nil, nil, errors.New("Error in route registration: Missing child Routes at " + route.Segment)
 	}
@@ -188,6 +185,7 @@ func processRequest(segments []string, method string, route *Route, i int, param
 	return processRequest(segments, method, route, i+1, params)
 }
 
+// getParamSegRoute ... returns a Route for a named parameter
 func getParamSegRoute(routes map[string]*Route) (*Route, error) {
 	var ok bool
 	var err error

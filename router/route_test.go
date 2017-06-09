@@ -150,24 +150,78 @@ func Test_processRequest(t *testing.T) {
 
 func Test_processSegment(t *testing.T) {
 	isParam := make(map[string]bool)
-	handlers := make(map[string]Handler)
-	routes := make(map[string]*Route)
+	isParamTrue := make(map[string]bool)
+	isParamTrue["POST"] = true
 
 	handler := func(res http.ResponseWriter, req *http.Request) {}
-
-	routeA := &Route{
-			Segment:  "aaa",
-			IsParam:  isParam,
-			Handlers: handlers,
-			Routes:   routes,		
-	}
+	//handlers := make(map[string]Handler)
+	handlersA := make(map[string]Handler)
+	handlersAB := make(map[string]Handler)
+	routes := make(map[string]*Route)
+	routesA := make(map[string]*Route)
+	routesAB := make(map[string]*Route)
+	routesB := make(map[string]*Route)
+	routesBP := make(map[string]*Route)
 
 	requestPath1 := RequestPath{
-		Segments: segments,         
-		Routes:   routes, 			
+		Segments: []string{},
 		Method:   "POST",
-		Handler:  handler, 	
+		Handler:  handler,
+		Routes:   make(map[string]*Route),
 	}
+	requestPathA := RequestPath{
+		Segments: []string{"aaa"},
+		Method:   "POST",
+		Handler:  handler,
+		Routes:   make(map[string]*Route),
+	}
+	requestPathAB := RequestPath{
+		Segments: []string{"aaa", "bbb"},
+		Method:   "POST",
+		Handler:  handler,
+		Routes:   routes,
+	}
+	requestPathBP := RequestPath{
+		Segments: []string{"aaa", ":bbb"},
+		Method:   "POST",
+		Handler:  handler,
+		Routes:   routes,
+	}
+
+	handlersA["POST"] = handler
+	handlersAB["POST"] = handler
+
+	routeA := &Route{
+		Segment:  "aaa",
+		IsParam:  isParam,
+		Handlers: handlersA,
+		Routes:   make(map[string]*Route),
+	}
+	routesA["aaa"] = routeA
+
+	routeAB := &Route{
+		Segment:  "aaa",
+		IsParam:  make(map[string]bool),
+		Handlers: make(map[string]Handler),
+		Routes:   routesAB,
+	}
+	routeB := &Route{
+		Segment:  "bbb",
+		IsParam:  isParam,
+		Handlers: handlersAB,
+		Routes:   routesB,
+	}
+	routeAB.Routes["bbb"] = routeB
+	routesAB["aaa"] = routeAB
+
+	routeBP := &Route{
+		Segment:  ":bbb",
+		IsParam:  isParamTrue,
+		Handlers: handlersAB,
+		Routes:   make(map[string]*Route),
+	}
+	routeA.Routes[":bbb"] = routeBP
+	routesBP["aaa"] = routeA
 
 	type args struct {
 		i           int
@@ -181,22 +235,66 @@ func Test_processSegment(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{
-			name: "",
-			args{
-				i: 0,
-				requestPath: 
-			}
+			name: "/ url - success",
+			args: args{
+				i:           0,
+				requestPath: requestPath1,
+			},
+			want:    routes,
+			wantErr: false,
+		},
+		{
+			name: "/aaa url - success",
+			args: args{
+				i:           0,
+				requestPath: requestPathA,
+			},
+			want:    routesA,
+			wantErr: false,
+		},
+		{
+			name: "/aaa/bbb url - success",
+			args: args{
+				i:           0,
+				requestPath: requestPathAB,
+			},
+			want:    routesAB,
+			wantErr: false,
+		},
+		{
+			name: "/aaa/:bbb url - success",
+			args: args{
+				i:           0,
+				requestPath: requestPathBP,
+			},
+			want:    routesBP,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := processSegment(tt.args.i, tt.args.requestPath)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("processSegment() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("processSegment() error = %+v, wantErr %+v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("processSegment() = %v, want %v", got, tt.want)
+
+			if a, ok := got[":bbb"]; ok {
+				if !reflect.DeepEqual(a.IsParam["POST"], tt.want["aaa"].Routes[":bbb"].IsParam["POST"]) {
+					t.Errorf("FAIL processSegment() = %+v, want %+v", got[":bbb"].IsParam["POST"], tt.want["aaa"].Routes[":bbb"].IsParam["POST"])
+				}
+				if !reflect.DeepEqual(a.Segment, tt.want["aaa"].Routes[":bbb"].Segment) {
+					t.Errorf("FAIL processSegment() = %+v, want %+v", got[":bbb"].Segment, tt.want["aaa"].Routes[":bbb"].Segment)
+				}
+
+				if reflect.ValueOf(a.Handlers["POST"]) != reflect.ValueOf(tt.want["aaa"].Routes[":bbb"].Handlers["POST"]) {
+
+					t.Errorf("FAIL processSegment() = %+v, want %+v", a.Handlers["POST"], tt.want["aaa"].Routes[":bbb"].Handlers["POST"])
+				}
+
+				if reflect.ValueOf(a.Routes["ccc"]) != reflect.ValueOf(tt.want["aaa"].Routes[":bbb"].Routes["ccc"]) {
+					t.Errorf("FAIL processSegment() = %+v, want %+v", a.Routes, tt.want["aaa"].Routes[":bbb"].Routes)
+				}
 			}
 		})
 	}
