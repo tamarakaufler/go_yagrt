@@ -54,23 +54,21 @@ func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 		ok  bool
 	)
 
-	routes := make(map[string]*Route)
-
 	segments := requestPath.Segments
 	method := requestPath.Method
 	handler := requestPath.Handler
 
+	//base case of the recursive method
 	if len(segments) == 0 {
-		return routes, nil
+		return requestPath.Routes, nil
 	}
 
-	fmt.Printf(">>> PROCESSING stage %d in segments %v\n", i, segments)
-	fmt.Printf("\t>>> processSegment: %+v\n", requestPath.Method)
-
 	seg := segments[i]
+	routes := requestPath.Routes
 	route, ok := routes[seg]
 
-	fmt.Printf("\t>>> processSegment: %+v\n", requestPath.Routes)
+	fmt.Printf(">>> PROCESSING stage %d in segments %v\n", i, segments)
+	fmt.Printf("\t\t>>> processSegment: %+v\n", requestPath.Method)
 
 	// a new segment => create a new child tree node/Route
 	if !ok {
@@ -81,6 +79,7 @@ func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 			Routes:   make(map[string]*Route),
 		}
 	}
+	fmt.Printf("\t\t>>> processSegment: Route for %v = %+v\n\n", seg, route)
 
 	if ok, err = regexp.MatchString("^:", seg); err != nil {
 		return nil, err
@@ -101,20 +100,17 @@ func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 
 		requestPath.Routes[seg] = route
 
-		fmt.Printf("\t>>> processSegment: len(route.Handlers) = %+v\n", len(route.Handlers))
-		fmt.Printf("\t>>> processSegment: route.Handlers = %+v\n", route.Handlers)
-		fmt.Printf("\t>>> FINISHED (i=%d, segment=%+v) - found the handler\n\n", i, seg)
+		fmt.Printf("\t\t>>> processSegment: len(route.Handlers) = %+v\n", len(route.Handlers))
+		fmt.Printf("\t\t>>> processSegment: route.Handlers = %+v\n", route.Handlers)
+		fmt.Printf("\t\t>>> FINISHED (i=%d, segment=%+v) - found the handler\n\n", i, seg)
 		return requestPath.Routes, nil
 	}
 
-	i++
-	seg = requestPath.Segments[i]
-	route.Routes[seg] = route
 	requestPath.Routes[seg] = route
 
-	fmt.Printf("\t>>> processSegment: recursion for i=%d: segment %s\n", i, requestPath.Segments[i])
+	fmt.Printf("\t>>> processSegment: recursion for i=%d: segment %s\n", i+1, requestPath.Segments[i+1])
 
-	return processSegment(i, requestPath)
+	return processSegment(i+1, requestPath)
 }
 
 // processRequest - heppens during HTTP request
