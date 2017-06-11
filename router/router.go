@@ -155,7 +155,7 @@ func (m *Mux) register(path string, method string, handler Handler) {
 	segments, err := getSegments(path)
 
 	if err != nil {
-		//fmt.Printf("Failed to register handler for path: %s\n", path)
+		fmt.Printf("Failed to register handler for path: %s\n", path)
 		return
 	}
 
@@ -166,6 +166,9 @@ func (m *Mux) doRegister(method string, segments []string, handler Handler) erro
 
 	// only root path registered
 	if len(segments) == 0 {
+
+		fmt.Printf(">>> doRegister: segments ... %+v\n\n", segments)
+
 		m.BaseRoute.Handlers[method] = handler
 
 		return nil
@@ -182,6 +185,11 @@ func (m *Mux) doRegister(method string, segments []string, handler Handler) erro
 	routes, err := processSegment(0, requestPath)
 	if err != nil {
 		return err
+	}
+
+	fmt.Printf(">>> doRegister: m.BaseRoute.Routes = %+v\n\n", routes)
+	for key, value := range routes {
+		fmt.Printf(">>> doRegister: %v = %+v\n", key, value)
 	}
 
 	m.BaseRoute.Routes = routes

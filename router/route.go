@@ -32,12 +32,13 @@ func getSegments(path string) ([]string, error) {
 	}
 
 	segments := strings.Split(path, "/")
+	//segments[0] = "/"
 
 	// if the path ends witha slash, we remove the last empty element
 	len := len(segments)
 
 	if segments[len-1] == "" {
-		len = len - 1
+		segments[len-1] = "/"
 	}
 
 	fmt.Printf(">>> segments in getSegments is %+v\n\n", segments[1:len])
@@ -96,11 +97,12 @@ func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 	if i == (sl - 1) {
 		route.Handlers[method] = handler
 
-		fmt.Printf("\t>>> processSegment: %+v\n", routes)
+		fmt.Printf("\t\t>>> Registering the handler for i=%d : %v\n", i, seg)
 
 		requestPath.Routes[seg] = route
 
 		fmt.Printf("\t>>> processSegment: len(route.Handlers) = %+v\n", len(route.Handlers))
+		fmt.Printf("\t>>> processSegment: route.Handlers = %+v\n", route.Handlers)
 		fmt.Printf("\t>>> FINISHED (i=%d, segment=%+v) - found the handler\n\n", i, seg)
 		return requestPath.Routes, nil
 	}
@@ -140,6 +142,22 @@ func processRequest(segments []string, method string, route *Route, i int, param
 	// base case 2 of the recursive method
 	//		returning when this is the last segment
 	if i == (len(segments) - 1) {
+		if len(segments) > 1 {
+			if handler, ok = route.Handlers[method]; !ok {
+				return nil, params, errors.New("No handler for " + fmt.Sprintf("%+v", segments))
+			}
+
+			if isParam, ok = route.IsParam[method]; ok && isParam == true {
+				params[route.Segment] = seg
+			}
+
+			fmt.Printf("\t>>> FINISHED (i=%d, segment=%+v) - found the handler\n\n", i, seg)
+			return handler, params, nil
+		}
+		if route, ok = route.Routes[seg]; !ok {
+			return nil, params, errors.New("No route for " + fmt.Sprintf("%v in %+v", seg, segments))
+
+		}
 		if handler, ok = route.Handlers[method]; !ok {
 			return nil, params, errors.New("No handler for " + fmt.Sprintf("%+v", segments))
 		}
@@ -162,10 +180,17 @@ func processRequest(segments []string, method string, route *Route, i int, param
 		params[route.Segment] = seg
 	}
 
-	parentSeg := route.Segment
+	routeSeg := route.Segment
 
 	y := i + 1
 	nextSeg := segments[y]
+
+	fmt.Printf("+++ routeSeg=%s, nextSeg=%s\n", routeSeg, nextSeg)
+	fmt.Printf("+++ routes=%+v\n\n", routes)
+
+	for key, value := range routes {
+		fmt.Printf("###### %v = %+v\n", key, value)
+	}
 
 	// recursion into child routes
 	if route, ok = routes[nextSeg]; !ok {
@@ -178,7 +203,7 @@ func processRequest(segments []string, method string, route *Route, i int, param
 			return nil, nil, err
 		}
 		if route == nil {
-			return nil, nil, errors.New("Error in route registration: Missing Route at " + parentSeg)
+			return nil, nil, errors.New("Error in route registration: Missing Route at " + routeSeg)
 		}
 	}
 
