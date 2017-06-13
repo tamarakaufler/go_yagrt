@@ -123,19 +123,16 @@ func (m *Mux) GET(path string, handler Handler) {
 
 // POST method
 func (m *Mux) POST(path string, handler Handler) {
-	//fmt.Printf("---> %v - %v\n", path, handler)
 	m.register(path, "POST", handler)
 }
 
 // PUT method
 func (m *Mux) PUT(path string, handler Handler) {
-	//fmt.Printf("---> %v - %v\n", path, handler)
 	m.register(path, "PUT", handler)
 }
 
 // DELETE method
 func (m *Mux) DELETE(path string, handler Handler) {
-	//fmt.Printf("---> %v - %v\n", path, handler)
 	m.register(path, "DELETE", handler)
 }
 

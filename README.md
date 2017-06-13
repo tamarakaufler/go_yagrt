@@ -20,7 +20,6 @@ Recreate a wheel to know how it works.
 - any object can be a handler; if it satisfies the Handler interface then it can be used to handle requests         
 
 
-
 ## Implementation
 
 - router:
@@ -36,3 +35,8 @@ Recreate a wheel to know how it works.
         * use a Trie type tree
         * use regexes
       * compare performace
+
+## CAVEAT
+
+Routes containing more that 2 parts, ie /aaa/bbb/ccc do not currently work
+unit test are broken
