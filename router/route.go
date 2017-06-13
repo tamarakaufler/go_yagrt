@@ -80,6 +80,7 @@ func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 		}
 	}
 	fmt.Printf("\t\t>>> processSegment: Route for %v = %+v\n\n", seg, route)
+	fmt.Printf("\t\t>>> processSegment: its Routes for = %+v\n\n", route.Routes)
 
 	if ok, err = regexp.MatchString("^:", seg); err != nil {
 		return nil, err
@@ -96,7 +97,7 @@ func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 	if i == (sl - 1) {
 		route.Handlers[method] = handler
 
-		fmt.Printf("\t\t>>> Registering the handler for i=%d : %v\n", i, seg)
+		fmt.Printf("\t\t>>> FINISHING Registering the handler for i=%d : %v\n", i, seg)
 
 		requestPath.Routes[seg] = route
 
@@ -117,7 +118,11 @@ func processSegment(i int, requestPath RequestPath) (map[string]*Route, error) {
 //		finds the relevant handler
 func processRequest(segments []string, method string, route *Route, i int, params map[string]interface{}) (Handler, map[string]interface{}, error) {
 
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	defer fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
 	fmt.Printf("!!! processRequest - parent segment: %+v\nsegments: %+v\ni: %+v\n!!!!!!!!!!\n\n", route.Segment, segments, i)
+	fmt.Printf("!!! processRequest - Route (i=%d) = %+v\n\n", i, route)
 
 	var ok bool
 	var isParam bool
@@ -203,7 +208,7 @@ func processRequest(segments []string, method string, route *Route, i int, param
 		}
 	}
 
-	return processRequest(segments, method, route, i+1, params)
+	return processRequest(segments, method, route, y, params)
 }
 
 // getParamSegRoute ... returns a Route for a named parameter

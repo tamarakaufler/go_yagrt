@@ -56,7 +56,6 @@ func Test_processRequest(t *testing.T) {
 		want1   map[string]interface{}
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{
 			name: "/ request - success",
 			args: args{
@@ -154,7 +153,6 @@ func Test_processSegment(t *testing.T) {
 	isParamTrue["POST"] = true
 
 	handler := func(res http.ResponseWriter, req *http.Request) {}
-	//handlers := make(map[string]Handler)
 	handlersA := make(map[string]Handler)
 	handlersAB := make(map[string]Handler)
 	routes := make(map[string]*Route)
