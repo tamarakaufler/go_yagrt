@@ -1,3 +1,7 @@
+/*
+router package - contains the implementation of the multiplexor
+
+*/
 package router
 
 import (
@@ -7,7 +11,10 @@ import (
 	"strings"
 )
 
-// Route - represents configuration for a path segment
+/*
+Route - represents configuration for a path segment
+		/aaa/bbb/ccc ... segments: "aaa", "bbb" and "ccc"
+*/
 type Route struct {
 	Segment  string
 	IsParam  map[string]bool    // key = method, indicates whether this is a named parameter
@@ -15,6 +22,7 @@ type Route struct {
 	Routes   map[string]*Route  // represents oprional children segments. key = segment. If no hild Routes => invoke the handler
 }
 
+// getSegments - creates and array of path segments
 func getSegments(path string) ([]string, error) {
 	var ok bool
 	var err error
@@ -211,7 +219,7 @@ func processRequest(segments []string, method string, route *Route, i int, param
 	return processRequest(segments, method, route, y, params)
 }
 
-// getParamSegRoute ... returns a Route for a named parameter
+// getParamSegRoute - returns a Route for a named parameter
 func getParamSegRoute(routes map[string]*Route) (*Route, error) {
 	var ok bool
 	var err error

@@ -1,6 +1,7 @@
 /*
-Package router ... an alternative multiplexor implementation
-allows to use named parameters
+Package router - alternative multiplexor implementation
+	allows to use named parameters
+	current HTTP methods: GET/POST/PUT/DELETE
 */
 package router
 
@@ -40,7 +41,7 @@ type RequestPath struct {
 }
 
 // New method for creating a new router, ie a new Mux instance
-// after creating a new Mux, paths need to be registere
+// after creating a new Mux, paths need to be register
 // (through GET/POST/PUT/DELETE method)
 // with all the relevant information like:
 //			HTTP method
