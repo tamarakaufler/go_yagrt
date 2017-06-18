@@ -162,25 +162,25 @@ func Test_processSegment(t *testing.T) {
 	routesBP := make(map[string]*Route)
 
 	requestPath1 := RequestPath{
-		Segments: []string{},
+		Segments: []string{"/"},
 		Method:   "POST",
 		Handler:  handler,
 		Routes:   make(map[string]*Route),
 	}
 	requestPathA := RequestPath{
-		Segments: []string{"aaa"},
+		Segments: []string{"/", "aaa"},
 		Method:   "POST",
 		Handler:  handler,
 		Routes:   make(map[string]*Route),
 	}
 	requestPathAB := RequestPath{
-		Segments: []string{"aaa", "bbb"},
+		Segments: []string{"/", "aaa", "bbb"},
 		Method:   "POST",
 		Handler:  handler,
 		Routes:   routes,
 	}
 	requestPathBP := RequestPath{
-		Segments: []string{"aaa", ":bbb"},
+		Segments: []string{"/", "aaa", ":bbb"},
 		Method:   "POST",
 		Handler:  handler,
 		Routes:   routes,
