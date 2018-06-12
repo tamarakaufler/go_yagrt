@@ -1,6 +1,6 @@
 # go_yagrt Yet Another Go Router - read as [go youghurt]
 
-Recreate a wheel to know how it works.
+Yet Another Go Router: recreate a wheel to know how it works
 
 ## Request journey
 
